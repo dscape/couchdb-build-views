@@ -1,0 +1,64 @@
+#!/usr/bin/env node
+
+var frameless = require('frameless')
+  , url       = require('url')
+  , nano      = require('nano')
+  , request   = require('request')
+  ;
+
+frameless(
+    { name: 'couchdb', 'default': 'http://localhost:5984' }, function (opts) {
+
+      var server = nano(opts.couchdb);
+
+      server.db.list(function (err, dbs) {
+        if(err) {
+          return frameless.err(err.message, 'listfail');
+        }
+
+        dbs.forEach(function (db) {
+          if(db.indexOf('_') === 0) {
+            return;
+          }
+
+          server.dinosaur(
+            { path: db + '/_all_docs'
+            , params:
+              { "startkey": "_design/"
+              , "endkey": "_design0"
+              , "include_docs": true
+              }
+          }, function (err, ddocs) {
+            if(err) {
+              return frameless.err(err.message, 'ddocsfail');
+            }
+
+            if(!Array.isArray(ddocs.rows)) {
+              return frameless.warn(JSON.stringify(ddocs), 'noddocs');
+            }
+
+            ddocs = ddocs.rows.forEach(function (d) {
+              var ddoc_id = d.id.split('/')[1];
+              var ddoc_views = d.doc && d.doc.views;
+              var thisDb = server.use(db);
+
+              if(ddoc_views && Object.keys(ddoc_views).length !== 0) {
+                Object.keys(ddoc_views).forEach(function (vname){
+                  frameless.info('building ' + ddoc_id + '/' + vname, db);
+                  thisDb.view(ddoc_id, vname, function (err, wat) {
+                    if (err) {
+                      return frameless.err(db + '/' + ddoc_id + '/' + vname,
+                        'fuu');
+                    }
+                    frameless.info(db + '/' + ddoc_id + '/' + vname, 'built');
+                  });
+                });
+              } else {
+                frameless.warn(db + '/' + ddoc_id +
+                  ' has no views', 'ohnoes');
+              }
+            });
+          });
+        });
+      });
+});

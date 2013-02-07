@@ -1,0 +1,25 @@
+{
+  "name": "couchdb-build-views",
+  "version": "0.0.0",
+  "description": "Build CouchDB Views after a migration or fresh install",
+  "main": "bin/couchdb-build-views",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": "",
+  "keywords": [
+    "couchdb",
+    "build",
+    "views"
+  ],
+  "author": "nuno job (@dscape)",
+  "license": "mit",
+  "dependencies": {
+    "request": "~2.12.0",
+    "nano": "~3.3.6",
+    "frameless": "0.0.5"
+  },
+  "bin": {
+    "couchdb-build-views": "bin/couchdb-build-views"
+  }
+}
